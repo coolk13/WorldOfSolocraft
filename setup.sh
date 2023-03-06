@@ -35,6 +35,9 @@ echo "# Initialise Database"
 echo "#########################################################"
 echo ""
 
+# Bind server to local address
+sudo sed -i 's/bind-address            = 127.0.0.1/bind-address = 192.168.88.48' /etc/mysql/mariadb.conf.d/50-server.cnf
+
 # Prepare MariaDB server for AzerothCore (need to be root)
 # NOTE: you should probably lock down MySQL, especially the root user
 sudo mysql < sql/00-initial-database-setup.sql
@@ -89,10 +92,18 @@ echo ""
 
 # Move our configurations in place
 cp confs/worldserver.conf "${HOME}/${AZEROTHCORE_SERVER_DIR}/etc/"
-echo "BindIP = $AZEROTHCORE_SERVER_BIND_IP" >> "${HOME}/${AZEROTHCORE_SERVER_DIR}/etc/worldserver.conf"
+cat <<EOF >> "${HOME}/${AZEROTHCORE_SERVER_DIR}/etc/worldserver.conf"
+BindIP = $AZEROTHCORE_SERVER_BIND_IP
+LoginDatabaseInfo     = "$AZEROTHCORE_SERVER_BIND_IP;3306;acore;acore;acore_auth"
+WorldDatabaseInfo     = "$AZEROTHCORE_SERVER_BIND_IP;3306;acore;acore;acore_world"
+CharacterDatabaseInfo = "$AZEROTHCORE_SERVER_BIND_IP;3306;acore;acore;acore_characters"
+EOF
 
 cp confs/authserver.conf "${HOME}/${AZEROTHCORE_SERVER_DIR}/etc/"
-echo "BindIP = $AZEROTHCORE_SERVER_BIND_IP" >> "${HOME}/${AZEROTHCORE_SERVER_DIR}/etc/authserver.conf"
+cat <<EOF >> "${HOME}/${AZEROTHCORE_SERVER_DIR}/etc/authserver.conf"
+BindIP = $AZEROTHCORE_SERVER_BIND_IP
+LoginDatabaseInfo     = "$AZEROTHCORE_SERVER_BIND_IP;3306;acore;acore;acore_auth"
+EOF
 
 mkdir -p "${HOME}/${AZEROTHCORE_SERVER_DIR}/etc/modules/"
 cp confs/modules/*.conf "${HOME}/${AZEROTHCORE_SERVER_DIR}/etc/modules/"
